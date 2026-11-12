@@ -1,0 +1,117 @@
+from decimal import Decimal, InvalidOperation
+
+products = {}
+
+def add_product():
+    sku = input("SKU: ").strip().upper()
+    if not sku:
+        print("SKU cannot be blank.")
+        return
+    if sku in products:
+        print("That SKU already exists.")
+        return
+
+    name = input("Product name: ").strip()
+    if not name:
+        print("Product name cannot be blank.")
+        return
+
+    try:
+        price = Decimal(input("Unit price: ").strip())
+        quantity = int(input("Opening quantity: ").strip())
+        reorder = int(input("Reorder level: ").strip())
+        if price < 0 or quantity < 0 or reorder < 0:
+            raise ValueError
+    except (InvalidOperation, ValueError):
+        print("Enter a non-negative price and whole-number quantities.")
+        return
+
+    products[sku] = {
+        "name": name, "price": price,
+        "quantity": quantity, "reorder": reorder
+    }
+    print("Product added.")
+
+def list_products():
+    if not products:
+        print("No products recorded.")
+        return
+    for sku, p in products.items():
+        print(f"{sku} | {p['name']} | "
+              f"{p['price']:.2f} | Qty: {p['quantity']}")
+
+def stock_in():
+    sku = input("SKU: ").strip().upper()
+    if sku not in products:
+        print("Product not found.")
+        return
+    try:
+        amount = int(input("Quantity received: "))
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        print("Quantity must be a positive whole number.")
+        return
+    products[sku]["quantity"] += amount
+    print("Stock received. New balance:",
+          products[sku]["quantity"])
+
+def stock_out():
+    sku = input("SKU: ").strip().upper()
+    if sku not in products:
+        print("Product not found.")
+        return
+    try:
+        amount = int(input("Quantity sold: "))
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        print("Quantity must be a positive whole number.")
+        return
+    if amount > products[sku]["quantity"]:
+        print("Insufficient stock. No change made.")
+        return
+    products[sku]["quantity"] -= amount
+    print("Sale recorded. New balance:",
+          products[sku]["quantity"])
+
+def low_stock():
+    matches = [(sku, p) for sku, p in products.items()
+               if p["quantity"] <= p["reorder"]]
+    if not matches:
+        print("No low-stock items.")
+        return
+    for sku, p in matches:
+        print(f"{sku} | {p['name']} | Qty: {p['quantity']} "
+              f"| Reorder level: {p['reorder']}")
+
+def main():
+    while True:
+        print("\nINVENTORY MANAGEMENT SYSTEM")
+        print("1. Add product")
+        print("2. List products")
+        print("3. Stock in")
+        print("4. Stock out / sale")
+        print("5. Low-stock report")
+        print("6. Exit")
+        choice = input("Choose an option: ").strip()
+
+        if choice == "1":
+            add_product()
+        elif choice == "2":
+            list_products()
+        elif choice == "3":
+            stock_in()
+        elif choice == "4":
+            stock_out()
+        elif choice == "5":
+            low_stock()
+        elif choice == "6":
+            print("Goodbye.")
+            break
+        else:
+            print("Invalid option. Choose 1–6.")
+
+if __name__ == "__main__":
+    main()
+
